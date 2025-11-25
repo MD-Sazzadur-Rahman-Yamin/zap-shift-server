@@ -29,13 +29,20 @@ async function run() {
     const parcelsColl = db.collection("parcels");
 
     //parcel API
-    app.get("/parcels", async (req,res)=> {
-
+    app.get("/parcels", async (req, res) => {
+      const query = {};
+      const { email } = req.query;
+      if (email) {
+        query.senderEmail = email;
+      }
+      const cursor = parcelsColl.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
     });
-    app.post("/parcels", async (req,res)=>{
-        const parcel = req.body;
-        const result = await parcelsColl.insertOne(parcel);
-        res.send(result);
+    app.post("/parcels", async (req, res) => {
+      const parcel = req.body;
+      const result = await parcelsColl.insertOne(parcel);
+      res.send(result);
     });
 
     await client.db("admin").command({ ping: 1 });
