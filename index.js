@@ -93,6 +93,25 @@ async function run() {
       res.send({ url: session.url });
     });
 
+    app.patch("/payment-success", async (req, res) => {
+      const sessionId = req.query.session_id;
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+      if (session.payment_status === "paid") {
+        const id = session.metadata.parcelId;
+        const query = { _id: new ObjectId(id) };
+        const update = {
+          $set: { paymentStatus: "paid" },
+        };
+
+        const result = await parcelsColl.updateOne(query, update);
+        res.send(result);
+      }
+
+      console.log(session);
+      res.send({ success: false });
+    });
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
