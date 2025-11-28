@@ -68,6 +68,18 @@ async function run() {
     });
 
     //payment releted APIs
+
+    app.get("/payments", async (req,res) => {
+      const email = req.query.email;
+      const query = {};
+      if(email){
+        query.customerEmail = email;
+      }
+      const cursor = paymentColl.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     app.post("/create-checkout-session", async (req, res) => {
       const paymentInfo = req.body;
       const amount = parseInt(paymentInfo.cost) * 100;
