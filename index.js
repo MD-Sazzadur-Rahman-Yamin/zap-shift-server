@@ -108,7 +108,7 @@ async function run() {
       if (paymentExist) {
         return res.send({
           message: "payment exist",
-          transactionID,
+          transactionId: transactionID,
           trackingId: paymentExist.trackingId,
         });
       }
