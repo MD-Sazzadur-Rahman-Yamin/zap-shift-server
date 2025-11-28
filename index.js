@@ -10,9 +10,32 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET);
 const app = express();
 const port = process.env.PORT || 3333;
 
+const admin = require("firebase-admin");
+
+const serviceAccount = require("./zap-shift-yamin-firebase-adminsdk.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
 //middlewere
 app.use(express.json());
 app.use(cors());
+const varifyFBToken = async (req, res, next) => {
+  console.log("laaaaa" + req.headers.authorization);
+  const token = req.headers?.authorization;
+  if (!token) {
+    return res.status(401).send({ message: "Unauthorize access" });
+  }
+  try {
+    const idtoken = token.split(" ")[1];
+    const decoded = await admin.auth().verifyIdToken(idtoken);
+    res.decoded_email = decoded.email;
+    next();
+  } catch {
+    return res.status(401).send({ message: "Unauthorize access" });
+  }
+};
 
 //mongodb
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.zzj1wzu.mongodb.net/?appName=Cluster0`;
@@ -69,10 +92,13 @@ async function run() {
 
     //payment releted APIs
 
-    app.get("/payments", async (req,res) => {
+    app.get("/payments", varifyFBToken, async (req, res) => {
       const email = req.query.email;
+      if (email !== req.decoded_email) {
+        return res.status(403).send("forbidden access");
+      }
       const query = {};
-      if(email){
+      if (email) {
         query.customerEmail = email;
       }
       const cursor = paymentColl.find(query);
@@ -105,7 +131,6 @@ async function run() {
         success_url: `${process.env.SITE_DOMAIN}/dashboard/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.SITE_DOMAIN}/dashboard/payment-cancelled`,
       });
-      console.log(session);
       res.send({ url: session.url });
     });
 
@@ -157,7 +182,6 @@ async function run() {
         }
       }
 
-      console.log(session);
       res.send({ success: false });
     });
 
