@@ -102,6 +102,17 @@ async function run() {
       const session = await stripe.checkout.sessions.retrieve(sessionId);
       const trackingId = generateTrackingId();
 
+      const transactionID = session.payment_intent;
+      const query = { transactionId: transactionID };
+      const paymentExist = await paymentColl.findOne(query);
+      if (paymentExist) {
+        return res.send({
+          message: "payment exist",
+          transactionID,
+          trackingId: paymentExist.trackingId,
+        });
+      }
+
       if (session.payment_status === "paid") {
         const id = session.metadata.parcelId;
         const query = { _id: new ObjectId(id) };
@@ -120,6 +131,7 @@ async function run() {
           transactionId: session.payment_intent,
           paymentStatus: session.payment_status,
           paidAt: new Date(),
+          trackingId: trackingId,
         };
         if (session.payment_status === "paid") {
           const resultPayment = await paymentColl.insertOne(payment);
