@@ -75,14 +75,23 @@ async function run() {
     });
 
     //riders API
-    app.post("/riders",async (req,res) => {
+    app.get("/riders", async (req, res) => {
+      const query = {};
+      if (req.query.status) {
+        query.status = req.query.status;
+      }
+      const cursor = ridersColl.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+    app.post("/riders", async (req, res) => {
       const rider = req.body;
       rider.status = "pending";
       rider.createAt = new Date();
 
       const result = await ridersColl.insertOne(rider);
       res.send(result);
-    })
+    });
 
     //parcel API
     app.get("/parcels", async (req, res) => {
