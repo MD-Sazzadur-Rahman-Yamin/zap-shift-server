@@ -92,6 +92,28 @@ async function run() {
       const result = await ridersColl.insertOne(rider);
       res.send(result);
     });
+    app.patch("/riders/:id", async (req, res) => {
+      const status = req.body.status;
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updatedDocs = {
+        $set: {
+          status: status,
+        },
+      };
+      const result = await ridersColl.updateOne(query, updatedDocs);
+      if (status === "approved") {
+        const email = req.body.email;
+        const userQuery = { email };
+        const updateUser = {
+          $set: {
+            role: "rider",
+          },
+        };
+        const userResult = await usersColl.updateOne(userQuery, updateUser);
+      }
+      res.send(result);
+    });
 
     //parcel API
     app.get("/parcels", async (req, res) => {
