@@ -55,6 +55,7 @@ async function run() {
     const usersColl = db.collection("users");
     const parcelsColl = db.collection("parcels");
     const paymentColl = db.collection("payments");
+    const ridersColl = db.collection("riders");
 
     //users API
     app.post("/users",async (req,res) => {
@@ -158,7 +159,7 @@ async function run() {
 
       const transactionID = session.payment_intent;
       const query = { transactionId: transactionID };
-      const payment Exist= await paymentColl.findOne(query);
+      const paymentExist= await paymentColl.findOne(query);
       if (paymentExist) {
         return res.send({
           message: "payment exist",
