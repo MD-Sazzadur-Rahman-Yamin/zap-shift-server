@@ -58,19 +58,29 @@ async function run() {
     const ridersColl = db.collection("riders");
 
     //users API
-    app.post("/users",async (req,res) => {
+    app.post("/users", async (req, res) => {
       const user = req.body;
       user.role = "user";
       user.createAt = new Date();
 
       const email = user.email;
-      const isUserExist = await usersColl.findOne({email});
+      const isUserExist = await usersColl.findOne({ email });
 
-      if(isUserExist){
-        return res.send({message:'User Exist'})
+      if (isUserExist) {
+        return res.send({ message: "User Exist" });
       }
 
       const result = await usersColl.insertOne(user);
+      res.send(result);
+    });
+
+    //riders API
+    app.post("/riders",async (req,res) => {
+      const rider = req.body;
+      rider.status = "pending";
+      rider.createAt = new Date();
+
+      const result = await ridersColl.insertOne(rider);
       res.send(result);
     })
 
@@ -159,7 +169,7 @@ async function run() {
 
       const transactionID = session.payment_intent;
       const query = { transactionId: transactionID };
-      const paymentExist= await paymentColl.findOne(query);
+      const paymentExist = await paymentColl.findOne(query);
       if (paymentExist) {
         return res.send({
           message: "payment exist",
