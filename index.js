@@ -22,7 +22,6 @@ admin.initializeApp({
 app.use(express.json());
 app.use(cors());
 const varifyFBToken = async (req, res, next) => {
-  console.log("laaaaa" + req.headers.authorization);
   const token = req.headers?.authorization;
   if (!token) {
     return res.status(401).send({ message: "Unauthorize access" });
@@ -30,7 +29,7 @@ const varifyFBToken = async (req, res, next) => {
   try {
     const idtoken = token.split(" ")[1];
     const decoded = await admin.auth().verifyIdToken(idtoken);
-    res.decoded_email = decoded.email;
+    req.decoded_email = decoded.email;
     next();
   } catch {
     return res.status(401).send({ message: "Unauthorize access" });
@@ -101,7 +100,7 @@ async function run() {
       if (email) {
         query.customerEmail = email;
       }
-      const cursor = paymentColl.find(query);
+      const cursor = paymentColl.find(query).sort({ paidAt: -1 });
       const result = await cursor.toArray();
       res.send(result);
     });
