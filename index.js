@@ -58,7 +58,7 @@ async function run() {
     const ridersColl = db.collection("riders");
 
     //users API
-    app.get("/users",varifyFBToken, async (req, res) => {
+    app.get("/users", varifyFBToken, async (req, res) => {
       const cursor = usersColl.find();
       const result = await cursor.toArray();
       res.send(result);
@@ -77,6 +77,19 @@ async function run() {
       }
 
       const result = await usersColl.insertOne(user);
+      res.send(result);
+    });
+
+    app.patch("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const roleInfo = req.body;
+      const query = { _id: new ObjectId(id) };
+      const updatedDocs = {
+        $set: {
+          role: roleInfo.role,
+        },
+      };
+      const result = await usersColl.updateOne(query, updatedDocs);
       res.send(result);
     });
 
