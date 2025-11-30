@@ -58,6 +58,12 @@ async function run() {
     const ridersColl = db.collection("riders");
 
     //users API
+    app.get("/users",varifyFBToken, async (req, res) => {
+      const cursor = usersColl.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     app.post("/users", async (req, res) => {
       const user = req.body;
       user.role = "user";
