@@ -57,6 +57,18 @@ async function run() {
     const paymentColl = db.collection("payments");
     const ridersColl = db.collection("riders");
 
+    //middleware with database access
+    const varifyAdmin = async (req, res, next) => {
+      //must be used after varifyFBToken middilware
+      const email = req.decoded_email;
+      const query = { email };
+      const user = await usersColl.findOne(query);
+      if (!user || user.role !== "admin") {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
+    };
+
     //users API
     app.get("/users", varifyFBToken, async (req, res) => {
       const cursor = usersColl.find();
@@ -89,18 +101,23 @@ async function run() {
       res.send(result);
     });
 
-    app.patch("/users/:id/role", async (req, res) => {
-      const id = req.params.id;
-      const roleInfo = req.body;
-      const query = { _id: new ObjectId(id) };
-      const updatedDocs = {
-        $set: {
-          role: roleInfo.role,
-        },
-      };
-      const result = await usersColl.updateOne(query, updatedDocs);
-      res.send(result);
-    });
+    app.patch(
+      "/users/:id/role",
+      varifyFBToken,
+      varifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const roleInfo = req.body;
+        const query = { _id: new ObjectId(id) };
+        const updatedDocs = {
+          $set: {
+            role: roleInfo.role,
+          },
+        };
+        const result = await usersColl.updateOne(query, updatedDocs);
+        res.send(result);
+      }
+    );
 
     //riders API
     app.get("/riders", async (req, res) => {
@@ -120,7 +137,7 @@ async function run() {
       const result = await ridersColl.insertOne(rider);
       res.send(result);
     });
-    app.patch("/riders/:id", async (req, res) => {
+    app.patch("/riders/:id", varifyFBToken, varifyAdmin, async (req, res) => {
       const status = req.body.status;
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -182,7 +199,7 @@ async function run() {
     app.get("/payments", varifyFBToken, async (req, res) => {
       const email = req.query.email;
       if (email !== req.decoded_email) {
-        return res.status(403).send("forbidden access");
+        return res.status(403).send({ message: "forbidden access" });
       }
       const query = {};
       if (email) {
