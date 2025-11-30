@@ -71,7 +71,16 @@ async function run() {
 
     //users API
     app.get("/users", varifyFBToken, async (req, res) => {
-      const cursor = usersColl.find();
+      const searchUser = req.query.searchUser;
+      const query = {};
+      if (searchUser) {
+        // query.displayName = { $regex: searchUser, $options: "i" };
+        query.$or = [
+          { displayName: { $regex: searchUser, $options: "i" } },
+          { email: { $regex: searchUser, $options: "i" } },
+        ];
+      }
+      const cursor = usersColl.find(query).sort({ createAt: -1 }).limit(20);
       const result = await cursor.toArray();
       res.send(result);
     });
