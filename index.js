@@ -130,9 +130,16 @@ async function run() {
 
     //riders API
     app.get("/riders", async (req, res) => {
+      const { status, workStatus, district } = req.query;
       const query = {};
-      if (req.query.status) {
-        query.status = req.query.status;
+      if (status) {
+        query.status = status;
+      }
+      if (district) {
+        query.district = district;
+      }
+      if (workStatus) {
+        query.workStatus = workStatus;
       }
       const cursor = ridersColl.find(query);
       const result = await cursor.toArray();
@@ -153,6 +160,7 @@ async function run() {
       const updatedDocs = {
         $set: {
           status: status,
+          workStatus: "available",
         },
       };
       const result = await ridersColl.updateOne(query, updatedDocs);
@@ -172,9 +180,12 @@ async function run() {
     //parcel API
     app.get("/parcels", async (req, res) => {
       const query = {};
-      const { email } = req.query;
+      const { email, deliveryStatus } = req.query;
       if (email) {
         query.senderEmail = email;
+      }
+      if (deliveryStatus) {
+        query.deliveryStatus = deliveryStatus;
       }
       const option = { sort: { createAt: -1 } };
       const cursor = parcelsColl.find(query, option);
@@ -267,7 +278,11 @@ async function run() {
         const id = session.metadata.parcelId;
         const query = { _id: new ObjectId(id) };
         const update = {
-          $set: { paymentStatus: "paid", trackingId: trackingId },
+          $set: {
+            paymentStatus: "paid",
+            deliveryStatus: "pending-pickup",
+            trackingId: trackingId,
+          },
         };
 
         const result = await parcelsColl.updateOne(query, update);
