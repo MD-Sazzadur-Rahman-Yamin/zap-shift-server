@@ -200,7 +200,7 @@ async function run() {
         query.riderEmail = riderEmail;
       }
       if (deliveryStatus) {
-        query.deliveryStatus = deliveryStatus;
+        query.deliveryStatus = { $in: ["driver_assigned", "rider_arriving"] };
       }
       const cursor = parcelsColl.find(query);
       const result = await cursor.toArray();
@@ -247,6 +247,18 @@ async function run() {
         riderUpdatedDoc
       );
       res.send(riderResult);
+    });
+
+    app.patch("/parcels/:id/status", async (req, res) => {
+      const { deliveryStatus } = req.body;
+      const query = { _id: new ObjectId(req.params.id) };
+      const updatedDoc = {
+        $set: {
+          deliveryStatus: deliveryStatus,
+        },
+      };
+      const result = await parcelsColl.updateOne(query, updatedDoc);
+      res.send(result);
     });
 
     app.delete("/parcels/:id", async (req, res) => {
