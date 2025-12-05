@@ -199,9 +199,11 @@ async function run() {
       if (riderEmail) {
         query.riderEmail = riderEmail;
       }
-      if (deliveryStatus) {
+      if (deliveryStatus !== "parcel_delivered") {
         // query.deliveryStatus = { $in: ["driver-assigned", "rider_arriving"] };
         query.deliveryStatus = { $nin: ["parcel_delivered"] };
+      } else {
+        query.deliveryStatus = deliveryStatus;
       }
       const cursor = parcelsColl.find(query);
       const result = await cursor.toArray();
@@ -258,7 +260,7 @@ async function run() {
           deliveryStatus: deliveryStatus,
         },
       };
-      if(deliveryStatus === "parcel_delivered"){
+      if (deliveryStatus === "parcel_delivered") {
         //update Rider Info
         const riderQuery = { _id: new ObjectId(riderId) };
         const riderUpdatedDoc = {
